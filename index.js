@@ -1,11 +1,11 @@
-const axios=require("axios").default;
-const Web3=require("web3");
-const ethers=require("ethers");
-const abi=require("./abi.json");
+import axios from "axios";
+import Web3, { utils } from "web3";
+import {ethers, providers, Contract } from "ethers";
+import abi from "./abi.json";
 const web3 = new Web3('https://api.s0.ps.hmny.io');
-const contract_address="0xdC092Ea4D6e83B303ff731ACdC6f4Bf3764Fb803";
+const contract_address="0x8B6E9383Cf9DDEe4F049a395C2FB4dedCBA50157";
 const contract = new web3.eth.Contract(abi, contract_address);
-async function nodecount(){
+export async function nodecount(){
     var v;
 await contract.methods
 .nodecount()
@@ -15,7 +15,7 @@ await contract.methods
 }); 
 return v;
 }
-async function nodenameat(x){
+export async function nodenameat(x){
   var naam;
 var nodecoun=await nodecount();
     contract.methods
@@ -26,7 +26,7 @@ var nodecoun=await nodecount();
     });
     return naam;
 }   
-async function noderpc(index){
+export async function noderpc(index){
 var rc;
 await contract.methods
     .nodes(index)
@@ -37,7 +37,7 @@ await contract.methods
 return rc;
 } 
    
-async function allnoderpc(){
+export async function allnoderpc(){
   var no=await nodecount();
   //console.log(no);
   for(var x=0;x<no;x++){
@@ -46,18 +46,33 @@ async function allnoderpc(){
    }
 }
 
-async function getproof(aud,jwt){
+export async function getproof(aud,jwt){
   var no=await nodecount();
   let rpcurl=[];
   let jwtsign=[];
   var signedwhois=[];
-  var signedjwthash=[]
+  var signedjwthash=[];
+  var whoish;
+  var jwth=utils.sha3(jwt);
+  console.log(jwt);
+  console.log(jwth);
+  console.log(axios);
+  console.log(Web3);
+  axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${jwt}`)
+  .then(function (resp) {
+    whoish=utils.sha3(resp.data.email);
+  })
+  .catch(function (error) {
+    // handle error
+    console.log(error);
+  });
+ 
   for(var x=0;x<no;x++){
     var rpc=await noderpc(x);
     rpcurl.push(rpc+"/verify?jwt="+jwt+"&aud="+aud);
   }
   axios.all(rpcurl.map((endpoint) => axios.get(endpoint))).then(
-      axios.spread((...allData) => {
+     axios.spread((...allData) => {
         console.log({ allData });
         for(var i=0;i<no;i++){
          var res=allData[i].data;
@@ -65,54 +80,75 @@ async function getproof(aud,jwt){
           signedjwthash.push(rres[0]);
           signedwhois.push(rres[1]);
         }
-
+     
+        axios.post('http://localhost:4000/putproof', {
+          jwthash: jwth,
+          whoishash:whoish,
+          sijhash:signedjwthash,
+          siwhash:signedwhois,
+          jwth:jwth,
+        })
+        .then(function (response) {
+          console.log(response);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
       })
-      // var fullres=data.split("$");
-      // jwtsign.push(fullres[0]);
-      // whoissign.push(whoissign[0]);
-      
     
   );
 
  return jwtsign[0];
 }
-async function metamask(){
+export async function metamask(){
   const accounts = await window.ethereum.request({method:'eth_requestAccounts'});
   const account = accounts[0];
   console.log(account);
 }
-async function init(jwthash){
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+export async function init(jwthash,scaddress){
+  const provider = new providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(
+    const contract = new Contract(
       contract_address,
       abi,
       signer
     );
-    contract.authrlogin(jwthash).then((e) => {
+    contract.authxlogin(jwthash,scaddress).then((e) => {
       return e.hash;
     });
 }
-async function autologin(aud,jwt){
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
+export async function autologin(aud,jwt,scaddress){
+  const provider = new providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(
+    const contract = new Contract(
       contract_address,
       abi,
       signer
     );
-    const jwthash = Web3.utils.sha3(jwt);
-    contract.authrlogin(jwthash).then((e) => {
+    const jwthash = utils.sha3(jwt);
+    
+    contract.authxlogin(jwthash,scaddress).then((e) => {
       getproof(aud,jwt).then(e=>{
         return e;
       })
     });
 }
-module.exports.nodecount=nodecount;
-module.exports.nodenameat=nodenameat;
-module.exports.noderpc=noderpc;
-module.exports.allnoderpc=allnoderpc;
-module.exports.init=init;
-module.exports.metamask=metamask;
-module.exports.getproof=getproof;
-module.exports.autologin=autologin;
+export async function authxlogin(){
+
+}
+// const _nodecount = nodecount;
+// export { _nodecount as nodecount };
+// const _nodenameat = nodenameat;
+// export { _nodenameat as nodenameat };
+// const _noderpc = noderpc;
+// export { _noderpc as noderpc };
+// const _allnoderpc = allnoderpc;
+// export { _allnoderpc as allnoderpc };
+// const _init = init;
+// export { _init as init };
+// const _metamask = metamask;
+// export { _metamask as metamask };
+// const _getproof = getproof;
+// export { _getproof as getproof };
+// const _autologin = autologin;
+// export { _autologin as autologin };
