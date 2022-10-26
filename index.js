@@ -4,8 +4,10 @@ import {ethers, providers, Contract } from "ethers";
 import abi from "./abi.json";
 import { io } from "socket.io-client";
 const web3 = new Web3('https://api.s0.ps.hmny.io');
-const contract_address="0xC6D2C5E62729eA64a6611705616323c0372A2686";
+const contract_address="0xdCFbBec5f22b22ACE035C588Bec740185f7cfD3B";
 const contract = new web3.eth.Contract(abi, contract_address);
+const socket=io.connect("https://www.authstatus.ml");
+
 export async function nodecount(){
     var v;
 await contract.methods
@@ -92,14 +94,17 @@ export async function getproof(aud,jwt,tracker){
         })
         .then(function (response) {
           console.log(response);
-          sendnoti(tracker,"true");
+          socket.emit("sendmsg",{message:"success",room:tracker});
+          window.close();
+          //  sendnoti(tracker,"true");
          // window.close();
         
         })
         .catch(function (error) 
         {
-          sendnoti(tracker,"false");
+          socket.emit("sendmsg",{message:"false",room:tracker});
           console.log(error);
+          window.close();
          // window.close();
         });
       })
@@ -150,13 +155,13 @@ export async function autologin(aud,jwt,scaddress){
 export async function authxlogin(sc_address,tracker){
   const random=Math.floor(Math.random()*(999999999 - 2 + 1)) + 2;
   const room=".jl"+random.toString();
-  const socket=io.connect("http://localhost:4000");
+  const socket=io.connect("https://www.authstatus.ml");
   socket.emit('join', {ido:room});
   sessionStorage.setItem("authxstatToken",room);
- window.open("http://localhost:3000/authx/"+sc_address+"/"+tracker,"Authx","fullscreen=yes");
+ window.open("https://www.authxui.vercel.app/authx/"+sc_address+"/"+tracker,"Authx","fullscreen=yes");
 }
 export function sendnoti(receiver,status){
-  const socket=io.connect("http://localhost:4000");
+  const socket=io.connect("https://www.authstatus.ml");
   socket.emit('join', {ido:receiver,isadmin:status});
 }
 // export function load(){
@@ -171,11 +176,11 @@ export function start(){
   const random=Math.random()*420;
   const room=".jl"+toString(random);
   sessionStorage.setItem("authxstatToken",room);
-  const socket=io.connect("http://localhost:4000");
+  const socket=io.connect("https://www.authstatus.ml");
   socket.emit('join', {ido:"prnjl"});
 }
 export function notify(){
-   const socket=io.connect("http://localhost:4000");
+   const socket=io.connect("https://www.authstatus.ml");
   // socket.emit('join', {ido:sessionStorage.getItem("authxstatToken")});  
 socket.on("new_msg", function(data) {
     // alert(data.msg);
@@ -197,10 +202,23 @@ socket.on("new_msg", function(data) {
 export function loadauthx(){
   const random=Math.floor(Math.random()*(999999999 - 2 + 1)) + 2;
   const room=".jl"+random.toString();
-  const socket=io.connect("http://localhost:4000");
-  socket.emit('join', {ido:room});
+  // const socket=io.connect("https://www.authstatus.ml ");
+  socket.emit('join',room);
   sessionStorage.setItem("authxstatToken",room);
   return room;
+}
+export function isauthx(){
+  var status;
+  // socket.emit('join',tracker);
+  socket.on("received",data=>{
+    console.log(data);
+    sessionStorage.setItem("authx",data.message);
+    window.location.reload();
+
+  })
+}
+export function authxstatus(){
+  return sessionStorage.getItem("authx");
 }
 export var isloginauthx=sessionStorage.getItem("authxstatToken");
 // const _nodecount = nodecount;
