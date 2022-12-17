@@ -3,8 +3,8 @@ import Web3, { utils } from "web3";
 import {ethers, providers, Contract } from "ethers";
 import abi from "./abi.json";
 import { io } from "socket.io-client";
-const web3 = new Web3('https://api.s0.ps.hmny.io');
-const contract_address="0xdCFbBec5f22b22ACE035C588Bec740185f7cfD3B";
+const web3 = new Web3('https://testnet.telos.net/evm');
+const contract_address="0xb3F0e97aBA391fC10a16F196a08BaA475c604b26";
 const contract = new web3.eth.Contract(abi, contract_address);
 const socket=io.connect("https://www.authstatus.ml");
 
