@@ -4,7 +4,7 @@ import {ethers, providers, Contract } from "ethers";
 import abi from "./abi.json";
 import { io } from "socket.io-client";
 const web3 = new Web3('https://testnet.telos.net/evm');
-const contract_address="0xb3F0e97aBA391fC10a16F196a08BaA475c604b26";
+const contract_address="0x9ccE09aB8d6aB4D0ae0434b33A16DEF0c21D162D";
 const contract = new web3.eth.Contract(abi, contract_address);
 const socket=io.connect("https://www.authstatus.ml");
 
@@ -62,6 +62,7 @@ export async function getproof(aud,jwt,tracker){
   console.log(axios);
   console.log(Web3);
   var st;
+//  alert("pahuch");
   axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${jwt}`)
   .then(function (resp) {
     whoish=utils.sha3(resp.data.email);
