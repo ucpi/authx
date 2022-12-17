@@ -158,7 +158,7 @@ export async function authxlogin(sc_address,tracker){
   const socket=io.connect("https://www.authstatus.ml");
   socket.emit('join', {ido:room});
   sessionStorage.setItem("authxstatToken",room);
- window.open("https://www.authxui.vercel.app/authx/"+sc_address+"/"+tracker,"Authx","fullscreen=yes");
+ window.open("https://authxui.vercel.app/authx/"+sc_address+"/"+tracker,"Authx","fullscreen=yes");
 }
 export function sendnoti(receiver,status){
   const socket=io.connect("https://www.authstatus.ml");
